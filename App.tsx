@@ -5,41 +5,43 @@ import { generateId } from './utils';
 import ProductGrid from './components/ProductGrid';
 import CartSidebar from './components/CartSidebar';
 import Reports from './components/Reports';
-import { LayoutGrid, BarChart3, Flame, CheckCircle2 } from 'lucide-react';
+import { LayoutGrid, BarChart3, Flame, CheckCircle2, RefreshCw, HardDrive } from 'lucide-react';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'pos' | 'reports'>('pos');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [nextOrderNumber, setNextOrderNumber] = useState<number>(() => {
-    const saved = localStorage.getItem('next_order_number');
-    return saved ? parseInt(saved, 10) : 1;
+  
+  // Data State with LocalStorage initialization
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const saved = localStorage.getItem('pos_transactions');
+    return saved ? JSON.parse(saved) : [];
   });
+  
+  const [nextOrderNumber, setNextOrderNumber] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState(false);
   
   // State for Order Success Modal
   const [lastCompletedOrder, setLastCompletedOrder] = useState<{number: string, change?: number} | null>(null);
 
-  // Load transactions from localStorage on mount
+  // Initialize Order Number based on today's local transactions
   useEffect(() => {
-    const saved = localStorage.getItem('store_transactions');
-    if (saved) {
-      try {
-        setTransactions(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load transactions", e);
-      }
-    }
-  }, []);
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const todaysOrders = transactions.filter(t => t.timestamp >= startOfDay.getTime());
+    const maxOrder = todaysOrders.length > 0 
+      ? Math.max(...todaysOrders.map(t => parseInt(t.orderNumber) || 0))
+      : 0;
+      
+    setNextOrderNumber(maxOrder + 1);
+  }, []); // Run once on mount
 
-  // Save transactions when changed
+  // Save to LocalStorage whenever transactions change
   useEffect(() => {
-    localStorage.setItem('store_transactions', JSON.stringify(transactions));
+    localStorage.setItem('pos_transactions', JSON.stringify(transactions));
   }, [transactions]);
 
-  // Save next order number when changed
-  useEffect(() => {
-    localStorage.setItem('next_order_number', nextOrderNumber.toString());
-  }, [nextOrderNumber]);
+  // --- CART ACTIONS ---
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -73,12 +75,11 @@ const App: React.FC = () => {
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const total = Math.max(0, subtotal - discount);
     
-    // Use sequential order number
     const orderNumber = nextOrderNumber.toString();
-    setNextOrderNumber(prev => prev + 1);
+    const id = generateId();
 
     const newTransaction: Transaction = {
-      id: generateId(),
+      id,
       orderNumber,
       timestamp: Date.now(),
       items: [...cart],
@@ -90,31 +91,21 @@ const App: React.FC = () => {
     };
 
     setTransactions(prev => [...prev, newTransaction]);
-    clearCart();
-    
-    // Show success modal
     setLastCompletedOrder({ number: orderNumber });
+    clearCart();
+    setNextOrderNumber(prev => prev + 1);
   };
 
   const handleCancelTransaction = (transactionId: string) => {
-    setTransactions(prev => {
-      // Mark as cancelled instead of deleting
-      const updatedList = prev.map(t => 
-        t.id === transactionId ? { ...t, status: 'cancelled' as const } : t
-      );
-      
-      // Force local storage update immediately
-      localStorage.setItem('store_transactions', JSON.stringify(updatedList));
-      
-      return updatedList;
-    });
+    setTransactions(prev => prev.map(t => 
+      t.id === transactionId ? { ...t, status: 'cancelled' as const } : t
+    ));
   };
 
   const handleResetSystem = () => {
     setTransactions([]);
     setNextOrderNumber(1);
-    localStorage.removeItem('store_transactions');
-    localStorage.setItem('next_order_number', '1');
+    localStorage.removeItem('pos_transactions');
   };
 
   return (
@@ -150,7 +141,7 @@ const App: React.FC = () => {
       )}
 
       {/* Sidebar Navigation */}
-      <nav className="w-20 bg-gray-900 flex flex-col items-center py-6 gap-8 z-30 shadow-xl border-r border-gray-800">
+      <nav className="w-20 bg-gray-900 flex flex-col items-center py-6 gap-8 z-30 shadow-xl border-r border-gray-800 pt-10">
         <div className="text-orange-500 p-3 bg-gray-800 rounded-full mb-4 border-2 border-orange-600 shadow-lg shadow-orange-900/50">
           <Flame size={32} fill="currentColor" className="text-orange-500 animate-pulse" />
         </div>
@@ -173,19 +164,28 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex overflow-hidden pt-6">
         {currentView === 'pos' ? (
           <>
             {/* Left: Product Grid */}
             <div className="flex-1 flex flex-col min-w-0">
-              <header className="px-6 py-4 bg-white border-b border-orange-100 shadow-sm z-10 flex justify-between items-center">
-                <h1 className="text-xl font-bold flex items-center gap-3">
-                   {/* Mini Mascot in Header with Slow Animation */}
-                  <img src={MASCOT_URL} className="w-12 h-12 object-contain drop-shadow-md animate-mascot-slow" alt="Mascote" />
-                  <span className="text-4xl font-black text-fire uppercase tracking-tighter transform -skew-x-12" style={{ textShadow: '2px 2px 0px #000' }}>{APP_NAME}</span>
-                </h1>
-                <div className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded">
-                   PDV v2.2
+              {/* Header Centered */}
+              <header className="px-6 py-4 bg-white border-b border-orange-100 shadow-sm z-10 relative flex items-center justify-center min-h-[90px]">
+                
+                {/* Logo and Name Centered */}
+                <div className="flex items-center gap-5 transition-transform hover:scale-105 duration-300">
+                   <img src={MASCOT_URL} className="w-20 h-20 object-contain drop-shadow-xl animate-mascot-slow" alt="Mascote" />
+                   <h1 className="text-5xl font-black text-fire uppercase tracking-tighter transform -skew-x-6 drop-shadow-sm" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.8)' }}>
+                     {APP_NAME}
+                   </h1>
+                </div>
+
+                {/* Local Storage Indicator */}
+                <div className="absolute right-6 flex flex-col items-end gap-1">
+                   <div className="text-xs text-gray-400 font-medium bg-gray-100 px-3 py-1 rounded-full border border-gray-200 shadow-sm flex items-center gap-2">
+                      <HardDrive size={12} />
+                      LOCAL
+                   </div>
                 </div>
               </header>
               <div className="flex-1 overflow-hidden relative">
@@ -207,7 +207,7 @@ const App: React.FC = () => {
         ) : (
           <div className="w-full h-full bg-orange-50/50">
             <Reports 
-              key={transactions.length} // Force re-render when transactions change
+              key={transactions.length}
               transactions={transactions} 
               onCancelTransaction={handleCancelTransaction}
               onResetSystem={handleResetSystem}

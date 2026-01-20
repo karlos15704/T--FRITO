@@ -18,5 +18,5 @@ export const MOCK_PRODUCTS: Product[] = [
 
 export const APP_NAME = "TÔ FRITO!";
 
-// Mascote atualizado para Coxa de Frango Cartoon (Link Google Drive Direto)
+// Mascote: Link direto do Google Drive convertido para visualização
 export const MASCOT_URL = "https://drive.google.com/uc?export=view&id=1fPVuDju0y2LtOm329JahF1vuzB71Hrd-";
