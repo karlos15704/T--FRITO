@@ -58,10 +58,11 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
         {/* Mascot Image with Animation */}
         <div className="mb-6 relative w-48 h-48">
           <div className="absolute inset-0 bg-orange-100 rounded-full blur-2xl opacity-50 transform scale-110"></div>
+          {/* Added mix-blend-multiply to simulate background removal */}
           <img 
             src={MASCOT_URL} 
             alt="Mascote Tô Frito" 
-            className="w-full h-full object-contain relative z-10 animate-mascot"
+            className="w-full h-full object-contain relative z-10 animate-mascot mix-blend-multiply"
           />
         </div>
         

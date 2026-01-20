@@ -132,7 +132,7 @@ const App: React.FC = () => {
 
             <button 
               onClick={() => setLastCompletedOrder(null)}
-              className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-colors"
+              className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-orange-600 hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl hover:shadow-orange-500/30"
             >
               Nova Venda
             </button>
@@ -174,7 +174,8 @@ const App: React.FC = () => {
                 
                 {/* Logo and Name Centered */}
                 <div className="flex items-center gap-5 transition-transform hover:scale-105 duration-300">
-                   <img src={MASCOT_URL} className="w-20 h-20 object-contain drop-shadow-xl animate-mascot-slow" alt="Mascote" />
+                   {/* Added mix-blend-multiply and removed drop-shadow to hide white background */}
+                   <img src={MASCOT_URL} className="w-20 h-20 object-contain mix-blend-multiply animate-mascot-slow" alt="Mascote" />
                    <h1 className="text-5xl font-black text-fire uppercase tracking-tighter transform -skew-x-6 drop-shadow-sm" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.8)' }}>
                      {APP_NAME}
                    </h1>
