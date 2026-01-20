@@ -32,8 +32,8 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
   const discount = parseFloat(discountValue) || 0;
   const total = Math.max(0, subtotal - discount);
 
-  // URL DA IMAGEM DO QR CODE - TROQUE O LINK ABAIXO PELA SUA IMAGEM
-  const PIX_QR_IMAGE = "https://via.placeholder.com/400?text=QR+CODE+AQUI"; 
+  // Configuração da Imagem do Pix (Link fornecido)
+  const PIX_QR_IMAGE = "https://upnow-prod.ff45e40d1a1c8f7e7de4e976d0c9e555.r2.cloudflarestorage.com/sZfVUJbAelbb6Rfo7X2xf7SHdG82/dd07c32a-8de9-48cc-a6d6-77072b86c9d3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=2f488bd324502ec20fee5b40e9c9ed39%2F20260120%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260120T211559Z&X-Amz-Expires=43200&X-Amz-Signature=219bcd365bdd21f471b94deb3cc43205f21178d9df47dfbdaa1a666489ffc516&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22Captura%20de%20tela%202026-01-20%20181523.png%22";
 
   const handleCheckout = () => {
     if (!selectedMethod) return;
@@ -93,40 +93,46 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
       {/* PIX MODAL OVERLAY */}
       {showPixModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 relative">
+            
+            {/* Close Button Absolute for cleaner look */}
+            <button 
+                onClick={() => { setShowPixModal(false); setSelectedMethod(null); }}
+                className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-full transition-colors z-10"
+              >
+                <X size={20} />
+            </button>
+
             {/* Header */}
-            <div className="bg-teal-600 p-4 flex justify-between items-center text-white">
-              <h3 className="font-bold text-lg flex items-center gap-2">
-                <QrCode size={24} />
+            <div className="pt-8 px-6 text-center">
+              <div className="inline-flex p-3 bg-teal-50 rounded-full mb-3">
+                 <QrCode size={32} className="text-teal-600" />
+              </div>
+              <h3 className="font-black text-xl text-gray-800 uppercase tracking-tight">
                 Pagamento via Pix
               </h3>
-              <button 
-                onClick={() => { setShowPixModal(false); setSelectedMethod(null); }}
-                className="p-1 hover:bg-teal-700 rounded-full transition-colors"
-              >
-                <X size={24} />
-              </button>
+              <p className="text-gray-500 text-sm mt-1">Aproxime a câmera ou escaneie</p>
             </div>
 
             {/* Content */}
             <div className="p-6 flex flex-col items-center">
-              <div className="bg-white p-2 rounded-lg border-2 border-teal-100 shadow-sm mb-6">
-                {/* IMAGEM DO QR CODE AQUI - Tamanho ajustado para boa leitura */}
+              <div className="bg-white p-2 rounded-xl border-2 border-teal-500 shadow-lg shadow-teal-100 mb-6">
+                {/* IMAGEM DO QR CODE */}
                 <img 
                   src={PIX_QR_IMAGE} 
                   alt="QR Code Pix"
-                  className="w-64 h-64 object-contain" 
+                  className="w-64 h-64 object-contain mix-blend-multiply" 
                 />
               </div>
               
-              <div className="w-full text-center mb-6">
-                <p className="text-gray-500 text-sm mb-1">Total a Pagar</p>
-                <p className="text-3xl font-black text-teal-600">{formatCurrency(total)}</p>
+              <div className="w-full text-center mb-6 bg-teal-50 p-4 rounded-xl border border-teal-100">
+                <p className="text-teal-700 text-xs font-bold uppercase tracking-wider mb-1">Valor Total</p>
+                <p className="text-4xl font-black text-teal-700">{formatCurrency(total)}</p>
               </div>
 
               <button 
                 onClick={handleCheckout}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-200 text-lg animate-cta-bounce"
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-200 text-lg animate-cta-bounce active:scale-95 active:shadow-sm"
               >
                 <CheckCircle2 size={24} />
                 CONFIRMAR PAGAMENTO
