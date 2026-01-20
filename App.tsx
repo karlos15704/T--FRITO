@@ -141,25 +141,32 @@ const App: React.FC = () => {
       )}
 
       {/* Sidebar Navigation */}
-      <nav className="w-20 bg-gray-900 flex flex-col items-center py-6 gap-8 z-30 shadow-xl border-r border-gray-800 pt-10">
-        <div className="text-orange-500 p-3 bg-gray-800 rounded-full mb-4 border-2 border-orange-600 shadow-lg shadow-orange-900/50">
-          <Flame size={32} fill="currentColor" className="text-orange-500 animate-pulse" />
+      <nav className="w-16 bg-gray-900 flex flex-col items-center py-4 gap-6 z-30 shadow-xl border-r border-gray-800 pt-6">
+        <div className="text-orange-500 p-2 bg-gray-800 rounded-full mb-2 border border-orange-600 shadow-lg shadow-orange-900/50 hover:rotate-12 transition-transform duration-500 hover:scale-110">
+          <Flame size={20} fill="currentColor" className="text-orange-500 animate-pulse" />
         </div>
         
         <button 
           onClick={() => setCurrentView('pos')}
-          className={`p-3 rounded-xl transition-all duration-300 group ${currentView === 'pos' ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+          className={`p-2.5 rounded-xl transition-all duration-300 group relative ${currentView === 'pos' ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50 scale-105' : 'text-gray-400 hover:text-white hover:bg-gray-800 hover:scale-110'}`}
           title="Caixa / Pedidos"
         >
-          <LayoutGrid size={24} className={currentView === 'pos' ? "scale-110" : "group-hover:scale-110 transition-transform"} />
+          <LayoutGrid size={20} className={`transition-transform duration-300 ${currentView === 'pos' ? '' : 'group-hover:rotate-3'}`} />
+          {/* Active Dot */}
+          {currentView === 'pos' && (
+            <span className="absolute -right-1 -top-1 w-2.5 h-2.5 bg-white border-2 border-gray-900 rounded-full animate-bounce" />
+          )}
         </button>
 
         <button 
           onClick={() => setCurrentView('reports')}
-          className={`p-3 rounded-xl transition-all duration-300 group ${currentView === 'reports' ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+          className={`p-2.5 rounded-xl transition-all duration-300 group relative ${currentView === 'reports' ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50 scale-105' : 'text-gray-400 hover:text-white hover:bg-gray-800 hover:scale-110'}`}
           title="Relatórios de Vendas"
         >
-          <BarChart3 size={24} className={currentView === 'reports' ? "scale-110" : "group-hover:scale-110 transition-transform"} />
+          <BarChart3 size={20} className={`transition-transform duration-300 ${currentView === 'reports' ? '' : 'group-hover:-rotate-3'}`} />
+          {currentView === 'reports' && (
+            <span className="absolute -right-1 -top-1 w-2.5 h-2.5 bg-white border-2 border-gray-900 rounded-full animate-bounce" />
+          )}
         </button>
       </nav>
 
@@ -174,8 +181,14 @@ const App: React.FC = () => {
                 
                 {/* Logo and Name Centered */}
                 <div className="flex items-center gap-5 transition-transform hover:scale-105 duration-300">
-                   {/* Added mix-blend-multiply and removed drop-shadow to hide white background */}
-                   <img src={MASCOT_URL} className="w-20 h-20 object-contain mix-blend-multiply animate-mascot-slow" alt="Mascote" />
+                   {/* Optimized Image Loading: eager loading and fetchPriority */}
+                   <img 
+                      src={MASCOT_URL} 
+                      className="w-20 h-20 object-contain mix-blend-multiply animate-mascot-slow" 
+                      alt="Mascote" 
+                      loading="eager"
+                      fetchPriority="high"
+                    />
                    <h1 className="text-5xl font-black text-fire uppercase tracking-tighter transform -skew-x-6 drop-shadow-sm" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.8)' }}>
                      {APP_NAME}
                    </h1>
