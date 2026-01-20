@@ -11,14 +11,14 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   { 
     id: '2', 
-    name: "O 'Tô Frito' Clássico (150g + Molho)", 
+    name: "Tô Frito Clássico (150g + Molho)", 
     price: 15.00, 
     category: 'Porções', 
     imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80' 
   },
   { 
     id: '3', 
-    name: "O 'Tô Frito' Junior (100g)", 
+    name: "Tô Frito Junior (100g)", 
     price: 10.00, 
     category: 'Porções', 
     imageUrl: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80' 
