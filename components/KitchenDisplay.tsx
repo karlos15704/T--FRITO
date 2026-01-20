@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Transaction } from '../types';
-import { Clock, CheckCircle2, ChefHat, PackageCheck, History, RotateCcw } from 'lucide-react';
+import { Clock, CheckCircle2, ChefHat, PackageCheck, History, RotateCcw, Ban, AlertCircle } from 'lucide-react';
 
 interface KitchenDisplayProps {
   transactions: Transaction[];
@@ -24,11 +24,11 @@ const KitchenDisplay: React.FC<KitchenDisplayProps> = ({ transactions }) => {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  // Filter for active orders (Pendentes)
+  // Filter for active orders (Pendentes) - Includes cancelled ones so kitchen is notified
   const pendingOrders = useMemo(() => {
     return transactions
       .filter(t => 
-        t.status === 'completed' && 
+        (t.status === 'completed' || t.status === 'cancelled') && 
         t.timestamp >= startOfDay.getTime() &&
         !completedKitchenIds.includes(t.id)
       )
@@ -39,7 +39,7 @@ const KitchenDisplay: React.FC<KitchenDisplayProps> = ({ transactions }) => {
   const historyOrders = useMemo(() => {
     return transactions
       .filter(t => 
-        t.status === 'completed' && 
+        (t.status === 'completed' || t.status === 'cancelled') && 
         t.timestamp >= startOfDay.getTime() &&
         completedKitchenIds.includes(t.id)
       )
@@ -132,30 +132,64 @@ const KitchenDisplay: React.FC<KitchenDisplayProps> = ({ transactions }) => {
                const timeString = timeDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                
                const isHistory = viewMode === 'history';
+               const isCancelled = order.status === 'cancelled';
+
+               // Determine styling based on state
+               let borderColor = 'border-l-orange-500 border-gray-200';
+               let headerBg = 'bg-orange-50 border-orange-100';
+               let textColor = 'text-orange-600';
+               
+               if (isCancelled) {
+                 borderColor = 'border-l-red-500 border-red-200 ring-2 ring-red-100';
+                 headerBg = 'bg-red-100 border-red-200';
+                 textColor = 'text-red-600';
+               } else if (isHistory) {
+                 borderColor = 'border-l-blue-400 border-gray-200 opacity-90';
+                 headerBg = 'bg-blue-50 border-blue-100';
+                 textColor = 'text-blue-600';
+               }
 
                return (
-                 <div key={order.id} className={`bg-white rounded-xl shadow-sm border-l-4 border-y border-r flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 ${isHistory ? 'border-l-blue-400 border-gray-200 opacity-90' : 'border-l-orange-500 border-gray-200'}`}>
+                 <div key={order.id} className={`bg-white rounded-xl shadow-sm border-l-4 border-y border-r flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 relative ${borderColor}`}>
+                    
+                    {isCancelled && (
+                      <div className="absolute top-0 right-0 p-2 opacity-10">
+                        <Ban size={80} className="text-red-500" />
+                      </div>
+                    )}
+
                     {/* Card Header */}
-                    <div className={`p-3 border-b flex justify-between items-start ${isHistory ? 'bg-blue-50 border-blue-100' : 'bg-orange-50 border-orange-100'}`}>
-                       <div>
-                          <span className={`text-xs font-bold uppercase tracking-wider block mb-1 ${isHistory ? 'text-blue-600' : 'text-orange-600'}`}>Senha</span>
-                          <span className="text-4xl font-black text-slate-800 leading-none">#{order.orderNumber}</span>
+                    <div className={`p-3 border-b flex justify-between items-start ${headerBg}`}>
+                       <div className="z-10">
+                          {isCancelled ? (
+                             <div className="flex items-center gap-1 mb-1">
+                               <AlertCircle size={14} className="text-red-600" />
+                               <span className="text-xs font-bold text-red-600 uppercase tracking-wider">CANCELADO</span>
+                             </div>
+                          ) : (
+                             <span className={`text-xs font-bold uppercase tracking-wider block mb-1 ${textColor}`}>Senha</span>
+                          )}
+                          <span className={`text-4xl font-black leading-none ${isCancelled ? 'text-red-600 line-through decoration-4 decoration-red-400' : 'text-slate-800'}`}>
+                            #{order.orderNumber}
+                          </span>
                        </div>
-                       <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded border border-gray-100 shadow-sm">
+                       <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded border border-gray-100 shadow-sm z-10">
                           <Clock size={14} className="text-gray-400" />
                           <span className="text-sm font-bold text-gray-700">{timeString}</span>
                        </div>
                     </div>
 
                     {/* Items List */}
-                    <div className="p-4 flex-1 overflow-y-auto max-h-[300px]">
+                    <div className="p-4 flex-1 overflow-y-auto max-h-[300px] z-10">
                        <ul className="space-y-3">
                           {order.items.map((item, idx) => (
                              <li key={`${order.id}-${idx}`} className="flex items-start gap-3">
-                                <div className={`min-w-[24px] h-6 flex items-center justify-center font-bold text-sm rounded border ${isHistory ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-slate-100 text-slate-800 border-slate-200'}`}>
+                                <div className={`min-w-[24px] h-6 flex items-center justify-center font-bold text-sm rounded border 
+                                  ${isCancelled ? 'bg-red-100 text-red-800 border-red-200' : 
+                                    isHistory ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-slate-100 text-slate-800 border-slate-200'}`}>
                                    {item.quantity}
                                 </div>
-                                <span className={`font-medium leading-tight pt-0.5 ${isHistory ? 'text-gray-500 line-through' : 'text-slate-700'}`}>
+                                <span className={`font-medium leading-tight pt-0.5 ${isHistory || isCancelled ? 'text-gray-500 line-through' : 'text-slate-700'}`}>
                                    {item.name}
                                 </span>
                              </li>
@@ -164,8 +198,22 @@ const KitchenDisplay: React.FC<KitchenDisplayProps> = ({ transactions }) => {
                     </div>
 
                     {/* Action Footer */}
-                    <div className="p-3 bg-gray-50 border-t border-gray-100">
-                       {isHistory ? (
+                    <div className={`p-3 border-t ${isCancelled ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100'}`}>
+                       {isCancelled ? (
+                         viewMode === 'active' ? (
+                           <button 
+                              onClick={() => handleMarkAsDone(order.id)}
+                              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm animate-pulse"
+                           >
+                              <CheckCircle2 size={20} />
+                              CIENTE
+                           </button>
+                         ) : (
+                           <div className="w-full py-3 text-center font-bold text-red-400 bg-red-50 rounded-lg border border-red-100 flex items-center justify-center gap-2">
+                             <Ban size={18} /> CANCELADO
+                           </div>
+                         )
+                       ) : isHistory ? (
                          <button 
                             onClick={() => handleReturnToPrep(order.id)}
                             className="w-full bg-white hover:bg-orange-50 text-orange-600 border border-orange-200 hover:border-orange-300 font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm group"

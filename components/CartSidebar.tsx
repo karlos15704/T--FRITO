@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { CartItem, PaymentMethod } from '../types';
 import { formatCurrency } from '../utils';
 import { MASCOT_URL } from '../constants';
-import { X, Trash2, ShoppingCart, CreditCard, Banknote, QrCode, Lock, Unlock, Plus, Minus } from 'lucide-react';
+import { X, Trash2, ShoppingCart, CreditCard, Banknote, QrCode, Lock, Unlock, Plus, Minus, CheckCircle2 } from 'lucide-react';
 
 interface CartSidebarProps {
   cart: CartItem[];
@@ -16,6 +16,9 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
   const [discountValue, setDiscountValue] = useState<string>('');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   
+  // Pix Modal State
+  const [showPixModal, setShowPixModal] = useState(false);
+
   // Discount Security State
   const [isDiscountUnlocked, setIsDiscountUnlocked] = useState(false);
   const [showPasswordInput, setShowPasswordInput] = useState(false);
@@ -29,12 +32,16 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
   const discount = parseFloat(discountValue) || 0;
   const total = Math.max(0, subtotal - discount);
 
+  // URL DA IMAGEM DO QR CODE - TROQUE O LINK ABAIXO PELA SUA IMAGEM
+  const PIX_QR_IMAGE = "https://via.placeholder.com/400?text=QR+CODE+AQUI"; 
+
   const handleCheckout = () => {
     if (!selectedMethod) return;
     onCheckout(discount, selectedMethod);
     // Reset local state
     setDiscountValue('');
     setSelectedMethod(null);
+    setShowPixModal(false);
     setIsDiscountUnlocked(false);
     setShowPasswordInput(false);
     setPasswordAttempt('');
@@ -49,6 +56,13 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
     } else {
       setPasswordError(true);
       setPasswordAttempt('');
+    }
+  };
+
+  const handlePaymentSelect = (method: PaymentMethod) => {
+    setSelectedMethod(method);
+    if (method === PaymentMethod.PIX) {
+      setShowPixModal(true);
     }
   };
 
@@ -75,182 +89,230 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
   }
 
   return (
-    <div className="h-full flex flex-col bg-white border-l border-orange-200 shadow-xl z-20">
-      {/* Header */}
-      <div className="p-4 border-b border-orange-100 flex justify-between items-center bg-orange-50">
-        <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-          <ShoppingCart size={20} className="text-orange-600" />
-          Pedido ({cart.reduce((a, b) => a + b.quantity, 0)})
-        </h2>
-        <button 
-          onClick={onClearCart}
-          className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-full transition-colors"
-          title="Limpar carrinho"
-        >
-          <Trash2 size={18} />
-        </button>
-      </div>
-
-      {/* Items List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {cart.map((item) => (
-          <div key={item.id} className="flex gap-3 items-center bg-white border border-orange-100 p-3 rounded-lg shadow-sm group">
-            <img src={item.imageUrl} alt={item.name} className="w-12 h-12 rounded object-cover border border-orange-200" />
-            
-            <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
-              <h4 className="font-medium text-gray-800 truncate leading-tight">{item.name}</h4>
-              
-              <div className="flex items-end justify-between mt-2">
-                {/* Quantity Controls */}
-                <div className="flex items-center bg-orange-50 rounded-lg border border-orange-100">
-                  <button 
-                    onClick={() => onUpdateQuantity(item.id, -1)}
-                    className="p-1 hover:bg-orange-200 rounded-l-lg text-orange-700 transition-colors"
-                    disabled={item.quantity <= 1}
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <span className="text-xs font-bold text-gray-800 w-6 text-center">{item.quantity}</span>
-                  <button 
-                    onClick={() => onUpdateQuantity(item.id, 1)}
-                    className="p-1 hover:bg-orange-200 rounded-r-lg text-orange-700 transition-colors"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-xs text-gray-400">{formatCurrency(item.price)} un</div>
-                  <div className="text-sm font-bold text-orange-600">{formatCurrency(item.price * item.quantity)}</div>
-                </div>
-              </div>
+    <>
+      {/* PIX MODAL OVERLAY */}
+      {showPixModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="bg-teal-600 p-4 flex justify-between items-center text-white">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <QrCode size={24} />
+                Pagamento via Pix
+              </h3>
+              <button 
+                onClick={() => { setShowPixModal(false); setSelectedMethod(null); }}
+                className="p-1 hover:bg-teal-700 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
             </div>
 
-            <button 
-              onClick={() => onRemoveItem(item.id)}
-              className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-colors self-start"
-              title="Remover Item"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        ))}
-      </div>
+            {/* Content */}
+            <div className="p-6 flex flex-col items-center">
+              <div className="bg-white p-2 rounded-lg border-2 border-teal-100 shadow-sm mb-6">
+                {/* IMAGEM DO QR CODE AQUI - Tamanho ajustado para boa leitura */}
+                <img 
+                  src={PIX_QR_IMAGE} 
+                  alt="QR Code Pix"
+                  className="w-64 h-64 object-contain" 
+                />
+              </div>
+              
+              <div className="w-full text-center mb-6">
+                <p className="text-gray-500 text-sm mb-1">Total a Pagar</p>
+                <p className="text-3xl font-black text-teal-600">{formatCurrency(total)}</p>
+              </div>
 
-      {/* Checkout Section */}
-      <div className="p-4 bg-white border-t border-orange-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div className="space-y-3 mb-4">
-          <div className="flex justify-between text-gray-600">
-            <span>Subtotal</span>
-            <span>{formatCurrency(subtotal)}</span>
+              <button 
+                onClick={handleCheckout}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-200 text-lg animate-cta-bounce"
+              >
+                <CheckCircle2 size={24} />
+                CONFIRMAR PAGAMENTO
+              </button>
+            </div>
           </div>
-          
-          {/* Discount Logic */}
-          <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
-            {!isDiscountUnlocked ? (
-               !showPasswordInput ? (
-                <button 
-                  onClick={() => setShowPasswordInput(true)}
-                  className="w-full flex items-center justify-between text-orange-700 text-sm font-medium hover:text-orange-800 transition-colors"
-                >
-                  <span className="flex items-center gap-2"><Lock size={14}/> Adicionar Desconto</span>
-                  <span className="text-xs bg-orange-200 px-2 py-0.5 rounded text-orange-800">Gerente</span>
-                </button>
-               ) : (
-                 <div className="flex gap-2">
-                   <div className="flex-1">
-                     <input 
-                       type="password"
-                       placeholder="Senha Gerencial"
-                       className={`w-full text-sm p-1.5 border rounded focus:outline-none ${passwordError ? 'border-red-500 bg-red-50 placeholder-red-400' : 'border-orange-200'}`}
-                       value={passwordAttempt}
-                       onChange={(e) => setPasswordAttempt(e.target.value)}
-                       autoFocus
-                     />
+        </div>
+      )}
+
+      <div className="h-full flex flex-col bg-white border-l border-orange-200 shadow-xl z-20">
+        {/* Header */}
+        <div className="p-4 border-b border-orange-100 flex justify-between items-center bg-orange-50">
+          <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+            <ShoppingCart size={20} className="text-orange-600" />
+            Pedido ({cart.reduce((a, b) => a + b.quantity, 0)})
+          </h2>
+          <button 
+            onClick={onClearCart}
+            className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-full transition-colors"
+            title="Limpar carrinho"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+
+        {/* Items List */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {cart.map((item) => (
+            <div key={item.id} className="flex gap-3 items-center bg-white border border-orange-100 p-3 rounded-lg shadow-sm group">
+              <img src={item.imageUrl} alt={item.name} className="w-12 h-12 rounded object-cover border border-orange-200" />
+              
+              <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
+                <h4 className="font-medium text-gray-800 truncate leading-tight">{item.name}</h4>
+                
+                <div className="flex items-end justify-between mt-2">
+                  {/* Quantity Controls */}
+                  <div className="flex items-center bg-orange-50 rounded-lg border border-orange-100">
+                    <button 
+                      onClick={() => onUpdateQuantity(item.id, -1)}
+                      className="p-1 hover:bg-orange-200 rounded-l-lg text-orange-700 transition-colors"
+                      disabled={item.quantity <= 1}
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <span className="text-xs font-bold text-gray-800 w-6 text-center">{item.quantity}</span>
+                    <button 
+                      onClick={() => onUpdateQuantity(item.id, 1)}
+                      className="p-1 hover:bg-orange-200 rounded-r-lg text-orange-700 transition-colors"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-xs text-gray-400">{formatCurrency(item.price)} un</div>
+                    <div className="text-sm font-bold text-orange-600">{formatCurrency(item.price * item.quantity)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => onRemoveItem(item.id)}
+                className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-colors self-start"
+                title="Remover Item"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Checkout Section */}
+        <div className="p-4 bg-white border-t border-orange-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          <div className="space-y-3 mb-4">
+            <div className="flex justify-between text-gray-600">
+              <span>Subtotal</span>
+              <span>{formatCurrency(subtotal)}</span>
+            </div>
+            
+            {/* Discount Logic */}
+            <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
+              {!isDiscountUnlocked ? (
+                 !showPasswordInput ? (
+                  <button 
+                    onClick={() => setShowPasswordInput(true)}
+                    className="w-full flex items-center justify-between text-orange-700 text-sm font-medium hover:text-orange-800 transition-colors"
+                  >
+                    <span className="flex items-center gap-2"><Lock size={14}/> Adicionar Desconto</span>
+                    <span className="text-xs bg-orange-200 px-2 py-0.5 rounded text-orange-800">Gerente</span>
+                  </button>
+                 ) : (
+                   <div className="flex gap-2">
+                     <div className="flex-1">
+                       <input 
+                         type="password"
+                         placeholder="Senha Gerencial"
+                         className={`w-full text-sm p-1.5 border rounded focus:outline-none ${passwordError ? 'border-red-500 bg-red-50 placeholder-red-400' : 'border-orange-200'}`}
+                         value={passwordAttempt}
+                         onChange={(e) => setPasswordAttempt(e.target.value)}
+                         autoFocus
+                       />
+                     </div>
+                     <button 
+                      onClick={handleUnlockDiscount}
+                      className="bg-orange-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-orange-700"
+                     >
+                       OK
+                     </button>
+                     <button 
+                      onClick={() => { setShowPasswordInput(false); setPasswordError(false); }}
+                      className="text-gray-500 hover:text-gray-700"
+                     >
+                       <X size={16} />
+                     </button>
                    </div>
+                 )
+              ) : (
+                <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                   <Unlock size={16} className="text-green-600" />
+                   <input 
+                     type="number" 
+                     placeholder="Valor do Desconto (R$)" 
+                     className="w-full text-sm p-1.5 border border-green-200 bg-green-50 rounded focus:outline-none focus:border-green-500 text-green-800 placeholder-green-700/50"
+                     value={discountValue}
+                     onChange={(e) => setDiscountValue(e.target.value)}
+                     autoFocus
+                   />
                    <button 
-                    onClick={handleUnlockDiscount}
-                    className="bg-orange-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-orange-700"
-                   >
-                     OK
-                   </button>
-                   <button 
-                    onClick={() => { setShowPasswordInput(false); setPasswordError(false); }}
-                    className="text-gray-500 hover:text-gray-700"
+                     onClick={() => { setIsDiscountUnlocked(false); setDiscountValue(''); }}
+                     className="text-gray-400 hover:text-red-500"
+                     title="Remover desconto"
                    >
                      <X size={16} />
                    </button>
-                 </div>
-               )
-            ) : (
-              <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                 <Unlock size={16} className="text-green-600" />
-                 <input 
-                   type="number" 
-                   placeholder="Valor do Desconto (R$)" 
-                   className="w-full text-sm p-1.5 border border-green-200 bg-green-50 rounded focus:outline-none focus:border-green-500 text-green-800 placeholder-green-700/50"
-                   value={discountValue}
-                   onChange={(e) => setDiscountValue(e.target.value)}
-                   autoFocus
-                 />
-                 <button 
-                   onClick={() => { setIsDiscountUnlocked(false); setDiscountValue(''); }}
-                   className="text-gray-400 hover:text-red-500"
-                   title="Remover desconto"
-                 >
-                   <X size={16} />
-                 </button>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-dashed border-gray-300">
+              <span>Total</span>
+              <span>{formatCurrency(total)}</span>
+            </div>
           </div>
 
-          <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-dashed border-gray-300">
-            <span>Total</span>
-            <span>{formatCurrency(total)}</span>
+          {/* Payment Methods */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <button 
+              className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.CREDIT ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
+              onClick={() => handlePaymentSelect(PaymentMethod.CREDIT)}
+            >
+              <CreditCard size={20} className="mb-1" />
+              Crédito
+            </button>
+            <button 
+               className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.DEBIT ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
+               onClick={() => handlePaymentSelect(PaymentMethod.DEBIT)}
+            >
+              <CreditCard size={20} className="mb-1" />
+              Débito
+            </button>
+            <button 
+               className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.CASH ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
+               onClick={() => handlePaymentSelect(PaymentMethod.CASH)}
+            >
+              <Banknote size={20} className="mb-1" />
+              Dinheiro
+            </button>
+            <button 
+               className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.PIX ? 'bg-teal-100 border-teal-500 text-teal-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-teal-50 hover:border-teal-200'}`}
+               onClick={() => handlePaymentSelect(PaymentMethod.PIX)}
+            >
+              <QrCode size={20} className="mb-1" />
+              Pix
+            </button>
           </div>
-        </div>
 
-        {/* Payment Methods */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
           <button 
-            className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.CREDIT ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
-            onClick={() => setSelectedMethod(PaymentMethod.CREDIT)}
+            className={`w-full font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 transform active:scale-95 bg-orange-600 hover:bg-orange-700 text-white shadow-orange-200`}
+            disabled={!selectedMethod}
+            onClick={handleCheckout}
           >
-            <CreditCard size={20} className="mb-1" />
-            Crédito
-          </button>
-          <button 
-             className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.DEBIT ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
-             onClick={() => setSelectedMethod(PaymentMethod.DEBIT)}
-          >
-            <CreditCard size={20} className="mb-1" />
-            Débito
-          </button>
-          <button 
-             className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.CASH ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
-             onClick={() => setSelectedMethod(PaymentMethod.CASH)}
-          >
-            <Banknote size={20} className="mb-1" />
-            Dinheiro
-          </button>
-          <button 
-             className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.PIX ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
-             onClick={() => setSelectedMethod(PaymentMethod.PIX)}
-          >
-            <QrCode size={20} className="mb-1" />
-            Pix
+            {selectedMethod ? 'Confirmar Pedido' : 'Selecione Pagamento'}
           </button>
         </div>
-
-        <button 
-          className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 transform active:scale-95"
-          disabled={!selectedMethod}
-          onClick={handleCheckout}
-        >
-          {selectedMethod ? 'Confirmar Pedido' : 'Selecione Pagamento'}
-        </button>
       </div>
-    </div>
+    </>
   );
 };
 

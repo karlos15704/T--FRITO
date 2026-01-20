@@ -163,6 +163,18 @@ const Reports: React.FC<ReportsProps> = ({ transactions, onCancelTransaction, on
         `}).join('')
       : '<tr><td colspan="4" style="padding: 10px 0; text-align: center; color: #9ca3af;">Nenhum cancelamento.</td></tr>';
 
+    // Generate Active Sales Log (Extrato de Vendas)
+    const salesRows = activeTransactions
+      .sort((a, b) => a.timestamp - b.timestamp) // Sort by time ascending
+      .map(t => `
+        <tr>
+          <td style="padding: 4px 0; border-bottom: 1px solid #eee;">#${t.orderNumber}</td>
+          <td style="padding: 4px 0; border-bottom: 1px solid #eee;">${new Date(t.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+          <td style="padding: 4px 0; border-bottom: 1px solid #eee; font-size: 11px;">${t.paymentMethod}</td>
+          <td style="padding: 4px 0; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(t.total)}</td>
+        </tr>
+      `).join('');
+
     const htmlContent = `
       <html>
         <head>
@@ -196,13 +208,28 @@ const Reports: React.FC<ReportsProps> = ({ transactions, onCancelTransaction, on
             ${paymentRows}
           </table>
 
+          <h2>Extrato de Vendas (Detalhado)</h2>
+          <table>
+            <thead>
+              <tr style="border-bottom: 1px solid #000;">
+                <th align="left" width="20%">Ficha</th>
+                <th align="left" width="25%">Hora</th>
+                <th align="left" width="25%">Pagto</th>
+                <th align="right" width="30%">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${salesRows.length > 0 ? salesRows : '<tr><td colspan="4" style="text-align: center; padding: 10px;">Nenhuma venda.</td></tr>'}
+            </tbody>
+          </table>
+
           <h2>Vendas Canceladas</h2>
           <table>
             <thead>
                <tr>
-                 <th align="left" width="15%">Senha</th>
+                 <th align="left" width="15%">Ficha</th>
                  <th align="left" width="15%">Hora</th>
-                 <th align="left" width="50%">Itens Cancelados</th>
+                 <th align="left" width="50%">Itens</th>
                  <th align="right" width="20%">Valor</th>
                </tr>
             </thead>
@@ -211,7 +238,7 @@ const Reports: React.FC<ReportsProps> = ({ transactions, onCancelTransaction, on
             </tbody>
           </table>
 
-          <h2>Detalhamento de Produtos (Vendas)</h2>
+          <h2>Resumo de Produtos</h2>
           <table>
             <thead>
               <tr style="border-bottom: 1px solid #000;">
