@@ -5,7 +5,7 @@ import { generateId } from './utils';
 import ProductGrid from './components/ProductGrid';
 import CartSidebar from './components/CartSidebar';
 import Reports from './components/Reports';
-import { LayoutGrid, BarChart3, Flame, CheckCircle2, RefreshCw, HardDrive } from 'lucide-react';
+import { LayoutGrid, BarChart3, Flame, CheckCircle2, RefreshCw } from 'lucide-react';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'pos' | 'reports'>('pos');
@@ -181,13 +181,6 @@ const App: React.FC = () => {
                    </h1>
                 </div>
 
-                {/* Local Storage Indicator */}
-                <div className="absolute right-6 flex flex-col items-end gap-1">
-                   <div className="text-xs text-gray-400 font-medium bg-gray-100 px-3 py-1 rounded-full border border-gray-200 shadow-sm flex items-center gap-2">
-                      <HardDrive size={12} />
-                      LOCAL
-                   </div>
-                </div>
               </header>
               <div className="flex-1 overflow-hidden relative">
                 <ProductGrid products={MOCK_PRODUCTS} onAddToCart={addToCart} />
