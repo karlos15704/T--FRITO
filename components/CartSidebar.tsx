@@ -1,15 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CartItem, PaymentMethod } from '../types';
 import { formatCurrency } from '../utils';
 import { MASCOT_URL } from '../constants';
-import { X, Trash2, ShoppingCart, CreditCard, Banknote, QrCode, Lock, Unlock, Plus, Minus, CheckCircle2 } from 'lucide-react';
+import { X, Trash2, ShoppingCart, CreditCard, Banknote, QrCode, Lock, Unlock, Plus, Minus, CheckCircle2, Calculator, Delete } from 'lucide-react';
 
 interface CartSidebarProps {
   cart: CartItem[];
   onRemoveItem: (productId: string) => void;
   onUpdateQuantity: (productId: string, delta: number) => void;
   onClearCart: () => void;
-  onCheckout: (discount: number, method: PaymentMethod) => void;
+  onCheckout: (discount: number, method: PaymentMethod, change?: number, amountPaid?: number) => void;
 }
 
 const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQuantity, onClearCart, onCheckout }) => {
@@ -18,6 +18,11 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
   
   // Pix Modal State
   const [showPixModal, setShowPixModal] = useState(false);
+
+  // Cash/Calculator Modal State
+  const [showCashModal, setShowCashModal] = useState(false);
+  const [cashReceivedStr, setCashReceivedStr] = useState<string>('');
+  const cashInputRef = useRef<HTMLInputElement>(null);
 
   // Discount Security State
   const [isDiscountUnlocked, setIsDiscountUnlocked] = useState(false);
@@ -31,20 +36,43 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
 
   const discount = parseFloat(discountValue) || 0;
   const total = Math.max(0, subtotal - discount);
+  
+  // Cash Calculations
+  const cashReceived = parseFloat(cashReceivedStr.replace(',', '.')) || 0;
+  const cashChange = Math.max(0, cashReceived - total);
+  const missingCash = Math.max(0, total - cashReceived);
 
   // Configuração da Imagem do Pix (Link fornecido)
   const PIX_QR_IMAGE = "https://upnow-prod.ff45e40d1a1c8f7e7de4e976d0c9e555.r2.cloudflarestorage.com/sZfVUJbAelbb6Rfo7X2xf7SHdG82/dd07c32a-8de9-48cc-a6d6-77072b86c9d3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=2f488bd324502ec20fee5b40e9c9ed39%2F20260120%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260120T211559Z&X-Amz-Expires=43200&X-Amz-Signature=219bcd365bdd21f471b94deb3cc43205f21178d9df47dfbdaa1a666489ffc516&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22Captura%20de%20tela%202026-01-20%20181523.png%22";
 
-  const handleCheckout = () => {
-    if (!selectedMethod) return;
-    onCheckout(discount, selectedMethod);
-    // Reset local state
+  // Focus input when cash modal opens
+  useEffect(() => {
+    if (showCashModal && cashInputRef.current) {
+      cashInputRef.current.focus();
+    }
+  }, [showCashModal]);
+
+  const resetState = () => {
     setDiscountValue('');
     setSelectedMethod(null);
     setShowPixModal(false);
+    setShowCashModal(false);
+    setCashReceivedStr('');
     setIsDiscountUnlocked(false);
     setShowPasswordInput(false);
     setPasswordAttempt('');
+  };
+
+  const handleCheckout = () => {
+    if (!selectedMethod) return;
+    
+    // For Cash, we pass extra info
+    if (selectedMethod === PaymentMethod.CASH) {
+       onCheckout(discount, selectedMethod, cashChange, cashReceived);
+    } else {
+       onCheckout(discount, selectedMethod);
+    }
+    resetState();
   };
 
   const handleUnlockDiscount = () => {
@@ -63,7 +91,32 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
     setSelectedMethod(method);
     if (method === PaymentMethod.PIX) {
       setShowPixModal(true);
+    } else if (method === PaymentMethod.CASH) {
+      setShowCashModal(true);
     }
+  };
+
+  // Calculator Logic
+  const handleKeypadPress = (val: string) => {
+    if (val === 'C') {
+      setCashReceivedStr('');
+      return;
+    }
+    if (val === 'back') {
+      setCashReceivedStr(prev => prev.slice(0, -1));
+      return;
+    }
+    
+    // Prevent multiple decimals
+    if (val === ',' && cashReceivedStr.includes(',')) return;
+    
+    setCashReceivedStr(prev => prev + val);
+  };
+
+  const addBill = (amount: number) => {
+    const current = parseFloat(cashReceivedStr.replace(',', '.')) || 0;
+    const newVal = current + amount;
+    setCashReceivedStr(newVal.toString().replace('.', ','));
   };
 
   if (cart.length === 0) {
@@ -90,6 +143,95 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
 
   return (
     <>
+      {/* CASH CALCULATOR MODAL */}
+      {showCashModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 relative">
+              <div className="bg-orange-600 p-4 text-white flex justify-between items-center">
+                 <h3 className="font-bold text-lg flex items-center gap-2">
+                   <Calculator size={24} />
+                   Calculadora de Troco
+                 </h3>
+                 <button onClick={() => { setShowCashModal(false); setSelectedMethod(null); }} className="hover:bg-orange-700 p-1 rounded-full transition-colors">
+                   <X size={24} />
+                 </button>
+              </div>
+              
+              <div className="p-6 bg-slate-50">
+                 {/* Display Section */}
+                 <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                       <p className="text-xs text-gray-500 font-bold uppercase">Total a Pagar</p>
+                       <p className="text-2xl font-black text-gray-800">{formatCurrency(total)}</p>
+                    </div>
+                    <div className={`p-3 rounded-xl border shadow-sm ${missingCash > 0 ? 'bg-white border-red-200' : 'bg-green-100 border-green-300'}`}>
+                       <p className={`text-xs font-bold uppercase ${missingCash > 0 ? 'text-gray-500' : 'text-green-700'}`}>
+                         {missingCash > 0 ? 'Falta' : 'Troco'}
+                       </p>
+                       <p className={`text-2xl font-black ${missingCash > 0 ? 'text-red-500' : 'text-green-700'}`}>
+                         {missingCash > 0 ? formatCurrency(missingCash) : formatCurrency(cashChange)}
+                       </p>
+                    </div>
+                 </div>
+
+                 {/* Input Display */}
+                 <div className="mb-4 relative">
+                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Valor Recebido</label>
+                    <div className="flex items-center mt-1">
+                      <span className="absolute left-4 text-gray-400 font-bold">R$</span>
+                      <input 
+                        ref={cashInputRef}
+                        type="text" 
+                        value={cashReceivedStr}
+                        readOnly
+                        className="w-full bg-white border-2 border-orange-200 rounded-xl py-3 pl-10 pr-4 text-right text-3xl font-bold text-gray-800 focus:outline-none focus:border-orange-500 transition-colors shadow-inner"
+                        placeholder="0,00"
+                      />
+                    </div>
+                 </div>
+
+                 {/* Quick Add Buttons */}
+                 <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    {[2, 5, 10, 20, 50, 100].map(val => (
+                      <button 
+                        key={val}
+                        onClick={() => addBill(val)}
+                        className="flex-shrink-0 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold py-2 px-3 rounded-lg text-sm transition-colors shadow-sm"
+                      >
+                        +{val}
+                      </button>
+                    ))}
+                 </div>
+
+                 {/* Numeric Keypad */}
+                 <div className="grid grid-cols-3 gap-3 mb-6">
+                    {['1','2','3','4','5','6','7','8','9','C','0',','].map(key => (
+                       <button
+                         key={key}
+                         onClick={() => handleKeypadPress(key)}
+                         className={`py-4 rounded-xl text-xl font-bold shadow-sm transition-transform active:scale-95 border
+                           ${key === 'C' 
+                             ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' 
+                             : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'}`}
+                       >
+                         {key}
+                       </button>
+                    ))}
+                 </div>
+
+                 <button 
+                   disabled={missingCash > 0}
+                   onClick={handleCheckout}
+                   className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 transition-all text-lg flex items-center justify-center gap-2 animate-cta-bounce active:scale-95 active:shadow-none"
+                 >
+                   <CheckCircle2 size={24} />
+                   CONFIRMAR PAGAMENTO
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
       {/* PIX MODAL OVERLAY */}
       {showPixModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -294,7 +436,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
               Débito
             </button>
             <button 
-               className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.CASH ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'}`}
+               className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${selectedMethod === PaymentMethod.CASH ? 'bg-green-100 border-green-500 text-green-800 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-green-50 hover:border-green-200'}`}
                onClick={() => handlePaymentSelect(PaymentMethod.CASH)}
             >
               <Banknote size={20} className="mb-1" />
@@ -314,7 +456,13 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
             disabled={!selectedMethod}
             onClick={handleCheckout}
           >
-            {selectedMethod ? 'Confirmar Pedido' : 'Selecione Pagamento'}
+             {selectedMethod === PaymentMethod.CASH ? (
+               'Calcular Troco'
+             ) : selectedMethod ? (
+               'Confirmar Pedido'
+             ) : (
+               'Selecione Pagamento'
+             )}
           </button>
         </div>
       </div>

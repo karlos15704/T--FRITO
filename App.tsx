@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MOCK_PRODUCTS, APP_NAME, MASCOT_URL } from './constants';
 import { Product, CartItem, Transaction, PaymentMethod } from './types';
-import { generateId } from './utils';
+import { generateId, formatCurrency } from './utils';
 import ProductGrid from './components/ProductGrid';
 import CartSidebar from './components/CartSidebar';
 import Reports from './components/Reports';
@@ -72,7 +72,7 @@ const App: React.FC = () => {
 
   const clearCart = () => setCart([]);
 
-  const handleCheckout = (discount: number, method: PaymentMethod) => {
+  const handleCheckout = (discount: number, method: PaymentMethod, change?: number, amountPaid?: number) => {
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const total = Math.max(0, subtotal - discount);
     
@@ -88,11 +88,13 @@ const App: React.FC = () => {
       discount,
       total,
       paymentMethod: method,
+      change,
+      amountPaid,
       status: 'completed'
     };
 
     setTransactions(prev => [...prev, newTransaction]);
-    setLastCompletedOrder({ number: orderNumber });
+    setLastCompletedOrder({ number: orderNumber, change });
     clearCart();
     setNextOrderNumber(prev => prev + 1);
   };
@@ -131,6 +133,14 @@ const App: React.FC = () => {
                 {lastCompletedOrder.number}
               </span>
             </div>
+
+            {/* Change Display for Cash Payments */}
+            {lastCompletedOrder.change !== undefined && lastCompletedOrder.change > 0 && (
+              <div className="mb-6 bg-green-50 border border-green-200 p-4 rounded-xl">
+                 <span className="text-xs text-green-700 font-bold uppercase block">Troco a Devolver</span>
+                 <span className="text-3xl font-black text-green-700">{formatCurrency(lastCompletedOrder.change)}</span>
+              </div>
+            )}
 
             <button 
               onClick={() => setLastCompletedOrder(null)}

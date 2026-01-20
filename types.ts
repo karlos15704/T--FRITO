@@ -19,13 +19,15 @@ export interface CartItem extends Product {
 
 export interface Transaction {
   id: string;
-  orderNumber: string; // New field for the customer order number (Senha)
+  orderNumber: string;
   timestamp: number;
   items: CartItem[];
   subtotal: number;
   discount: number;
   total: number;
   paymentMethod: PaymentMethod;
+  amountPaid?: number; // Valor entregue pelo cliente
+  change?: number;     // Troco calculado
   status: 'completed' | 'cancelled';
 }
 

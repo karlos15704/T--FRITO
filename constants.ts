@@ -4,24 +4,24 @@ import { Product } from './types';
 export const MOCK_PRODUCTS: Product[] = [
   { 
     id: '1', 
-    name: 'Combo da Galera (Clássico + Refri)', 
+    name: 'Combo Tô Frito (Clássico + Refri)', 
     price: 18.00, 
     category: 'Combos', 
-    imageUrl: 'https://images.unsplash.com/photo-1513639776629-7b611594e29b?auto=format&fit=crop&w=800&q=80' 
+    imageUrl: 'https://upnow-prod.ff45e40d1a1c8f7e7de4e976d0c9e555.r2.cloudflarestorage.com/sZfVUJbAelbb6Rfo7X2xf7SHdG82/4ea4650e-9e85-45b4-974b-f2b8caf0921e?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=2f488bd324502ec20fee5b40e9c9ed39%2F20260120%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260120T220122Z&X-Amz-Expires=43200&X-Amz-Signature=d3bd1a17289edfeeda0368ee99f752b1ad396633bdb10c3da449c8f721132944&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22Captura%20de%20tela%202026-01-20%20185949.png%22' 
   },
   { 
     id: '2', 
     name: "Tô Frito Clássico (150g + Molho)", 
     price: 15.00, 
     category: 'Porções', 
-    imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80' 
+    imageUrl: 'https://upnow-prod.ff45e40d1a1c8f7e7de4e976d0c9e555.r2.cloudflarestorage.com/sZfVUJbAelbb6Rfo7X2xf7SHdG82/a3524630-d6d9-4b09-8b6c-7993e3b9c370?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=2f488bd324502ec20fee5b40e9c9ed39%2F20260120%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260120T220141Z&X-Amz-Expires=43200&X-Amz-Signature=2c398cc250e06d56df1f4016b0014135ccddf3d7f6b7a69be602f0e59974be61&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22sfgs.png%22' 
   },
   { 
     id: '3', 
     name: "Tô Frito Junior (100g)", 
     price: 10.00, 
     category: 'Porções', 
-    imageUrl: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80' 
+    imageUrl: 'https://upnow-prod.ff45e40d1a1c8f7e7de4e976d0c9e555.r2.cloudflarestorage.com/sZfVUJbAelbb6Rfo7X2xf7SHdG82/d565312c-aee5-4ba8-9159-a2fff90e5972?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=2f488bd324502ec20fee5b40e9c9ed39%2F20260120%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260120T220048Z&X-Amz-Expires=43200&X-Amz-Signature=11491bb91493462588559bda98a21cb2376adc8ed74ec3c223906295fbaf6188&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22Captura%20de%20tela%202026-01-20%20185904fs.png%22' 
   },
   { 
     id: '4', 
@@ -29,6 +29,13 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 5.00, 
     category: 'Bebidas', 
     imageUrl: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' 
+  },
+  { 
+    id: '5', 
+    name: 'Água Mineral 500ml', 
+    price: 3.00, 
+    category: 'Bebidas', 
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTlEMITlLWaoAqA_GO1TYV5Z-tIgaiMLpM9w&s' 
   },
 ];
 
