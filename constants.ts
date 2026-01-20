@@ -18,6 +18,5 @@ export const MOCK_PRODUCTS: Product[] = [
 
 export const APP_NAME = "TÔ FRITO!";
 
-// URL atualizada para um mascote estilo 'Frango no Fogo'. 
-// Se você quiser usar exatamente a imagem que enviou, faça o upload dela para um site como imgur.com e cole o link aqui.
-export const MASCOT_URL = "https://cdn-icons-png.flaticon.com/512/7541/7541675.png";
+// Mascote atualizado para Coxa de Frango Cartoon (Link Google Drive Direto)
+export const MASCOT_URL = "https://drive.google.com/uc?export=view&id=1fPVuDju0y2LtOm329JahF1vuzB71Hrd-";
