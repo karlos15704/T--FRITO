@@ -61,6 +61,18 @@
         50% { filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.9)); }
       }
 
+      /* New Subtle Animation for Empty Cart (Chill Mode) */
+      @keyframes mascot-chill {
+        0%, 100% { transform: translateY(0) rotate(-2deg) scale(1); }
+        50% { transform: translateY(-8px) rotate(2deg) scale(1.02); }
+      }
+
+      /* CTA Bounce Animation */
+      @keyframes cta-bounce {
+        0%, 100% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        50% { transform: scale(1.03); box-shadow: 0 15px 20px -5px rgba(249, 115, 22, 0.4); }
+      }
+
       .animate-mascot {
         animation: mascot-run 0.3s infinite linear, fire-pulse 1s infinite ease-in-out;
       }
@@ -68,6 +80,19 @@
       /* Slower animation for header */
       .animate-mascot-slow {
         animation: mascot-run 1s infinite ease-in-out;
+      }
+
+      /* Gentle animation for empty cart */
+      .animate-mascot-chill {
+        animation: mascot-chill 4s ease-in-out infinite;
+      }
+
+      /* Button CTA Animation */
+      .animate-cta-bounce {
+        animation: cta-bounce 2s infinite ease-in-out;
+      }
+      .animate-cta-bounce:active {
+        animation: none; /* Stop animation on click to feel responsiveness */
       }
     </style>
   <script type="importmap">

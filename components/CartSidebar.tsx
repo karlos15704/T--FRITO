@@ -62,7 +62,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cart, onRemoveItem, onUpdateQ
           <img 
             src={MASCOT_URL} 
             alt="Mascote Tô Frito" 
-            className="w-full h-full object-contain relative z-10 animate-mascot mix-blend-multiply"
+            className="w-full h-full object-contain relative z-10 animate-mascot-chill mix-blend-multiply"
           />
         </div>
         

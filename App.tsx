@@ -5,10 +5,11 @@ import { generateId } from './utils';
 import ProductGrid from './components/ProductGrid';
 import CartSidebar from './components/CartSidebar';
 import Reports from './components/Reports';
-import { LayoutGrid, BarChart3, Flame, CheckCircle2, RefreshCw } from 'lucide-react';
+import KitchenDisplay from './components/KitchenDisplay';
+import { LayoutGrid, BarChart3, Flame, CheckCircle2, ChefHat } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'pos' | 'reports'>('pos');
+  const [currentView, setCurrentView] = useState<'pos' | 'reports' | 'kitchen'>('pos');
   const [cart, setCart] = useState<CartItem[]>([]);
   
   // Data State with LocalStorage initialization
@@ -106,6 +107,7 @@ const App: React.FC = () => {
     setTransactions([]);
     setNextOrderNumber(1);
     localStorage.removeItem('pos_transactions');
+    localStorage.removeItem('kitchen_completed_ids'); // Also clear kitchen history
   };
 
   return (
@@ -132,7 +134,7 @@ const App: React.FC = () => {
 
             <button 
               onClick={() => setLastCompletedOrder(null)}
-              className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-orange-600 hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl hover:shadow-orange-500/30"
+              className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-orange-600 transition-colors duration-300 animate-cta-bounce active:scale-95 active:animate-none"
             >
               Nova Venda
             </button>
@@ -159,6 +161,17 @@ const App: React.FC = () => {
         </button>
 
         <button 
+          onClick={() => setCurrentView('kitchen')}
+          className={`p-2.5 rounded-xl transition-all duration-300 group relative ${currentView === 'kitchen' ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50 scale-105' : 'text-gray-400 hover:text-white hover:bg-gray-800 hover:scale-110'}`}
+          title="Cozinha / Expedição"
+        >
+          <ChefHat size={20} className={`transition-transform duration-300 ${currentView === 'kitchen' ? '' : 'group-hover:rotate-6'}`} />
+          {currentView === 'kitchen' && (
+            <span className="absolute -right-1 -top-1 w-2.5 h-2.5 bg-white border-2 border-gray-900 rounded-full animate-bounce" />
+          )}
+        </button>
+
+        <button 
           onClick={() => setCurrentView('reports')}
           className={`p-2.5 rounded-xl transition-all duration-300 group relative ${currentView === 'reports' ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50 scale-105' : 'text-gray-400 hover:text-white hover:bg-gray-800 hover:scale-110'}`}
           title="Relatórios de Vendas"
@@ -172,7 +185,7 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden pt-6">
-        {currentView === 'pos' ? (
+        {currentView === 'pos' && (
           <>
             {/* Left: Product Grid */}
             <div className="flex-1 flex flex-col min-w-0">
@@ -211,7 +224,15 @@ const App: React.FC = () => {
               />
             </div>
           </>
-        ) : (
+        )}
+
+        {currentView === 'kitchen' && (
+          <div className="w-full h-full bg-slate-100">
+            <KitchenDisplay transactions={transactions} />
+          </div>
+        )}
+
+        {currentView === 'reports' && (
           <div className="w-full h-full bg-orange-50/50">
             <Reports 
               key={transactions.length}
